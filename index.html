@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>برنامج المشتريات — نموذج أولي</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;color:#17212b;background:#f4f6f8}
+*{box-sizing:border-box}body{margin:0}header{background:#183b36;color:white;padding:22px 18px}header h1{margin:0 0 6px;font-size:24px}header p{margin:0;color:#d9e7e3;font-size:14px}
+main{max-width:1100px;margin:auto;padding:16px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.tabs button,.primary{border:0;border-radius:10px;padding:11px 15px;background:#dce8e5;color:#183b36;font-weight:700;cursor:pointer}.tabs button.active,.primary{background:#183b36;color:white}
+.panel{background:white;border:1px solid #e0e5e8;border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:0 2px 8px #17212b08}.panel h2{margin:0 0 14px;font-size:19px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px}label{display:block;font-size:13px;color:#4b5963;margin-bottom:5px}input,select{width:100%;padding:10px;border:1px solid #cbd4d9;border-radius:9px;background:#fff;font:inherit}button{font:inherit}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.muted{color:#687781;font-size:13px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.metric{border:1px solid #e0e5e8;border-radius:12px;padding:14px}.metric span{display:block;color:#66757e;font-size:13px;margin-bottom:7px}.metric strong{font-size:21px;overflow-wrap:anywhere}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{text-align:right;padding:10px;border-bottom:1px solid #edf0f2;font-size:14px}th{color:#596872;background:#f8fafb}.danger{background:#fff0ee;color:#a73528;border:0;border-radius:8px;padding:6px 9px;cursor:pointer}.hidden{display:none}.note{background:#fff8e6;border:1px solid #f0dfaa;border-radius:10px;padding:12px;font-size:13px;line-height:1.6}.green{color:#176b4d}.red{color:#a73528}
+
+#printReport{display:none}
+@media print{
+ body{background:white;color:#111}header{background:white;color:#111;padding:0 0 12px;border-bottom:2px solid #333}header p{color:#333}main{max-width:none;padding:0}.tabs,.tab,.panel:not(#printReport),.note{display:none!important}#printReport{display:block!important;border:0;box-shadow:none;padding:0;margin:14px 0}#printReport h2{margin:18px 0 8px;font-size:17px}#printReport .cards{grid-template-columns:repeat(3,1fr)}#printReport .metric{break-inside:avoid;padding:8px}#printReport .metric strong{font-size:16px}#printReport table{min-width:0;width:100%;font-size:11px}#printReport th,#printReport td{font-size:11px;padding:6px;border:1px solid #bbb}#printReport .muted{font-size:11px}button{display:none!important}@page{size:auto;margin:12mm}
+}
+</style>
+</head>
+<body>
+<header><h1>برنامج المشتريات</h1><p>نموذج أولي للتجربة · العملة: ريال سعودي</p></header>
+<main>
+<div class="note">هذه نسخة تجريبية تحفظ البيانات داخل المتصفح على هذا الجهاز فقط. المزامنة الحقيقية بين الآيفون والكمبيوتر تحتاج ربط قاعدة بيانات سحابية في الخطوة التالية.</div>
+<div class="tabs" style="margin-top:15px">
+<button class="active" data-tab="summary">الملخص الشهري</button><button data-tab="custody">العهد المستلمة</button><button data-tab="invoices">فواتير المشتريات</button>
+</div>
+<section id="summary" class="tab">
+<div class="panel"><div class="grid"><div><label>الشهر</label><input id="monthFilter" type="month"></div><div style="align-self:end"><button class="primary" id="refresh">تحديث الملخص</button></div></div></div>
+<div class="actions" style="margin-bottom:14px"><button class="primary" id="printBtn">طباعة تقرير الشهر بكل التفاصيل</button></div>
+<div class="cards">
+<div class="metric"><span>إجمالي العهد المستلمة</span><strong id="mCustody">0.00 ر.س</strong></div>
+<div class="metric"><span>إجمالي الفواتير شامل الضريبة</span><strong id="mGross">0.00 ر.س</strong></div>
+<div class="metric"><span>الضريبة المستخرجة من الفواتير</span><strong id="mVat">0.00 ر.س</strong></div>
+<div class="metric"><span>صافي المشتريات قبل الضريبة</span><strong id="mNet">0.00 ر.س</strong></div>
+<div class="metric"><span>المتبقي من العهدة</span><strong id="mRemaining">0.00 ر.س</strong></div>
+</div>
+<p class="muted">حساب الضريبة يفترض أن كل الفواتير خاضعة لنسبة 15% وشاملة للضريبة: الضريبة = الإجمالي × 15 ÷ 115. المتبقي = العهد − الفواتير شامل الضريبة.</p>
+</section>
+<section id="custody" class="tab hidden">
+<div class="panel"><h2>إضافة عهدة مستلمة</h2><form id="custodyForm"><div class="grid">
+<div><label>تاريخ الاستلام</label><input id="cDate" type="date" required></div>
+<div><label>مبلغ العهدة (ر.س)</label><input id="cAmount" type="number" min="0.01" step="0.01" placeholder="2000" required></div>
+<div><label>طريقة الاستلام</label><select id="cMethod"><option>كاش — سند صرف</option><option>تحويل بنكي</option><option>أخرى</option></select></div>
+<div><label>ملاحظات (اختياري)</label><input id="cNotes" placeholder="مثال: عهدة شهر أكتوبر"></div>
+</div><div class="actions"><button class="primary">حفظ العهدة</button></div></form></div>
+<div class="panel"><h2>سجل العهد</h2><div class="tablewrap"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>طريقة الاستلام</th><th>ملاحظات</th><th>إجراء</th></tr></thead><tbody id="custodyRows"></tbody></table></div></div>
+</section>
+<section id="invoices" class="tab hidden">
+<div class="panel"><h2>إضافة فاتورة مشتريات</h2><form id="invoiceForm"><div class="grid">
+<div><label>تاريخ الفاتورة</label><input id="iDate" type="date" required></div>
+<div><label>الصنف / البيان</label><input id="iItem" placeholder="غاز، خبز..." required></div>
+<div><label>المبلغ شامل الضريبة (ر.س)</label><input id="iAmount" type="number" min="0.01" step="0.01" placeholder="115" required></div>
+<div><label>اسم المشتري</label><input id="iBuyer" placeholder="اسم الشخص الذي اشترى" required></div>
+<div><label>رقم الفاتورة</label><input id="iNumber" placeholder="رقم الفاتورة"></div>
+<div><label>اسم المورد</label><input id="iSupplier" placeholder="اسم المورد" required></div>
+</div><div class="actions"><button class="primary">حفظ الفاتورة</button></div></form></div>
+<div class="panel"><h2>سجل الفواتير</h2><div class="tablewrap"><table><thead><tr><th>التاريخ</th><th>الصنف</th><th>المشتري</th><th>المبلغ شامل الضريبة</th><th>رقم الفاتورة</th><th>المورد</th><th>إجراء</th></tr></thead><tbody id="invoiceRows"></tbody></table></div></div>
+</section>
+<div class="panel"><h2>البيانات التجريبية</h2><p class="muted">تقدر تصدّر نسخة احتياطية من البيانات أو تستوردها في هذا النموذج. هذا لا يزامن الأجهزة تلقائيًا.</p><div class="actions"><button id="exportBtn">تصدير نسخة احتياطية</button><label style="margin:0;padding:8px 0">استيراد نسخة <input type="file" id="importFile" accept="application/json"></label><button id="clearBtn" class="danger">مسح كل البيانات</button></div></div>
+<section id="printReport" class="panel"></section>
+</main>
+<script>
+const $=id=>document.getElementById(id), key='purchasesPrototypeV1';
+let data={custodies:[],invoices:[]};
+try{data=JSON.parse(localStorage.getItem(key))||data}catch(e){}
+const today=new Date(), iso=today.toISOString().slice(0,10);
+$('cDate').value=iso;$('iDate').value=iso;$('monthFilter').value=iso.slice(0,7);
+const money=n=>(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' ر.س';
+function persist(){localStorage.setItem(key,JSON.stringify(data));render()}
+function monthOf(s){return (s||'').slice(0,7)}
+function render(){
+ const m=$('monthFilter').value;
+ const cs=data.custodies.filter(x=>monthOf(x.date)===m), ins=data.invoices.filter(x=>monthOf(x.date)===m);
+ const c=cs.reduce((s,x)=>s+Number(x.amount),0), g=ins.reduce((s,x)=>s+Number(x.amount),0), v=g*15/115, n=g-v, r=c-g;
+ $('mCustody').textContent=money(c);$('mGross').textContent=money(g);$('mVat').textContent=money(v);$('mNet').textContent=money(n);
+ $('mRemaining').textContent=money(r);$('mRemaining').className=r<0?'red':'green';
+ $('custodyRows').innerHTML=data.custodies.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<tr><td>${esc(x.date)}</td><td>${money(x.amount)}</td><td>${esc(x.method)}</td><td>${esc(x.notes||'—')}</td><td><button class="danger" onclick="del('custodies','${x.id}')">حذف</button></td></tr>`).join('')||'<tr><td colspan="5">لا توجد عهد مسجلة بعد</td></tr>';
+ $('invoiceRows').innerHTML=data.invoices.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.item)}</td><td>${esc(x.buyer)}</td><td>${money(x.amount)}</td><td>${esc(x.number||'—')}</td><td>${esc(x.supplier)}</td><td><button class="danger" onclick="del('invoices','${x.id}')">حذف</button></td></tr>`).join('')||'<tr><td colspan="7">لا توجد فواتير مسجلة بعد</td></tr>';
+ const allCust=data.custodies.filter(x=>monthOf(x.date)===m).slice().sort((a,b)=>a.date.localeCompare(b.date));
+ const allInv=data.invoices.filter(x=>monthOf(x.date)===m).slice().sort((a,b)=>a.date.localeCompare(b.date));
+ $('printReport').innerHTML=`<h1>تقرير المشتريات والعهد</h1><p>الشهر: ${esc(m||'—')} · العملة: ريال سعودي</p><h2>الملخص المالي</h2><div class="cards"><div class="metric"><span>إجمالي العهد المستلمة</span><strong>${money(c)}</strong></div><div class="metric"><span>إجمالي الفواتير شامل الضريبة</span><strong>${money(g)}</strong></div><div class="metric"><span>الضريبة المستخرجة (15/115)</span><strong>${money(v)}</strong></div><div class="metric"><span>صافي المشتريات قبل الضريبة</span><strong>${money(n)}</strong></div><div class="metric"><span>المتبقي من العهدة</span><strong>${money(r)}</strong></div></div><h2>تفاصيل العهد المستلمة (${allCust.length})</h2><table><thead><tr><th>م</th><th>تاريخ الاستلام</th><th>المبلغ</th><th>طريقة الاستلام</th><th>ملاحظات</th></tr></thead><tbody>${allCust.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.date)}</td><td>${money(x.amount)}</td><td>${esc(x.method)}</td><td>${esc(x.notes||'—')}</td></tr>`).join('')||'<tr><td colspan="5">لا توجد عهد مسجلة لهذا الشهر</td></tr>'}</tbody></table><h2>تفاصيل فواتير المشتريات (${allInv.length})</h2><table><thead><tr><th>م</th><th>تاريخ الفاتورة</th><th>الصنف / البيان</th><th>اسم المشتري</th><th>المبلغ شامل الضريبة</th><th>رقم الفاتورة</th><th>اسم المورد</th></tr></thead><tbody>${allInv.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.date)}</td><td>${esc(x.item)}</td><td>${esc(x.buyer)}</td><td>${money(x.amount)}</td><td>${esc(x.number||'—')}</td><td>${esc(x.supplier)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد فواتير مسجلة لهذا الشهر</td></tr>'}</tbody></table><p class="muted">ملاحظة: حُسبت الضريبة بافتراض أن المبالغ شاملة لضريبة قيمة مضافة بنسبة 15% وأن الفواتير خاضعة بالكامل لهذه النسبة. الضريبة = إجمالي الفواتير × 15 ÷ 115. المتبقي = العهد المستلمة − إجمالي الفواتير شامل الضريبة.</p>`;
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+window.del=(list,id)=>{if(confirm('هل تريد حذف هذه العملية؟')){data[list]=data[list].filter(x=>x.id!==id);persist()}};
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('hidden',x.id!==b.dataset.tab))}));
+$('custodyForm').addEventListener('submit',e=>{e.preventDefault();data.custodies.push({id:crypto.randomUUID(),date:$('cDate').value,amount:Number($('cAmount').value),method:$('cMethod').value,notes:$('cNotes').value});e.target.reset();$('cDate').value=iso;persist()});
+$('invoiceForm').addEventListener('submit',e=>{e.preventDefault();data.invoices.push({id:crypto.randomUUID(),date:$('iDate').value,item:$('iItem').value,amount:Number($('iAmount').value),buyer:$('iBuyer').value,number:$('iNumber').value,supplier:$('iSupplier').value});e.target.reset();$('iDate').value=iso;persist()});
+$('monthFilter').addEventListener('change',render);$('refresh').addEventListener('click',render);$('printBtn').addEventListener('click',()=>{render();window.print()});
+$('exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='purchases-backup.json';a.click();URL.revokeObjectURL(a.href)});
+$('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.custodies)||!Array.isArray(x.invoices))throw Error();data=x;persist();alert('تم استيراد البيانات')}catch{alert('الملف غير صالح')}e.target.value=''});
+$('clearBtn').addEventListener('click',()=>{if(confirm('تأكيد مسح جميع العهد والفواتير من هذا المتصفح؟')){data={custodies:[],invoices:[]};persist()}});
+render();
+</script></body></html>
